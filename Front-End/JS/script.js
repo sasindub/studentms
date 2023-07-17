@@ -1,6 +1,46 @@
 $(document).ready(function(){
-    
+
+//assign the current month
+      var currentDate = new Date();
+      var currentMonth = currentDate.getMonth(); // 0-based index
+      var monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      var currentMonthName = monthNames[currentMonth];
+      $("#month").val(currentMonthName);
+
     $("#load").hide();
+
+    function getDataLoop(data, status){
+        let month = $("#month").val();
+        var tbody ;
+        var lastStudent;
+        var isPaid;
+        for(let stu of data.content){
+
+            if(stu.stuPaidMonth === month){
+                isPaid = "<span style='color:white; text-align:center; background-color:#06c730; font-size:10pt; border-radius:5px; padding:0px 22px 0px 22px;' class=''>Paid</span>";
+            }else{
+                isPaid = `<a class="btn btn-primary btn-sm paid" id="${stu.stuId}">Payment</a>`;
+            }
+
+            tbody += `<tr><td scope="row">${stu.stuId}</td>
+            <td>${stu.stuName}</td>
+            <td>${stu.stuMobile}</td>
+            <td style="color:#c70404; font-weight: 700;">Last payment ${stu.stuPaidMonth}</td>
+            <td>${isPaid}
+            <a class="btnDel ms-5" id="${stu.stuId}" style="color:red;" title="Delete the student"><i class="fa-solid fa-square-minus"></i></a></td>
+            </tr>`
+            
+            lastStudent = stu.stuId;
+        }
+        if(status == "0"){
+            $("#id").val(lastStudent + 1);
+        }
+        $("#tbody").html(tbody);
+    }
+
     //get All Data
     getAllData();
     function getAllData(){
@@ -16,20 +56,7 @@ $(document).ready(function(){
             success: function(data){
 
                 if(data.code == "00"){
-                    var tbody ;
-                    var lastStudent;
-                    for(let stu of data.content){
-                        tbody += `<tr><td scope="row">${stu.stuId}</td>
-                        <td>${stu.stuName}</td>
-                        <td>${stu.stuMobile}</td>
-                        <td>${stu.stuPaidMonth}</td>
-                        <td><a class="btnDel" id="${stu.stuId}" style="color:red;" title="Delete the student"><i class="fa-solid fa-square-minus"></i></a></td>
-                        </tr>`
-
-                        lastStudent = stu.stuId;
-                    }
-                    $("#id").val(lastStudent + 1);
-                    $("#tbody").html(tbody);
+                    getDataLoop(data, "0");
                 }else{
                     $("#tbody").html("<tr><td>Error!!!!</td></tr>");
                     alert(data.message);
@@ -61,7 +88,7 @@ $(document).ready(function(){
                 "stuId":"",
                 "stuName":name,
                 "stuMobile":mobile,
-                "stuPaidMonth":"00"
+                "stuPaidMonth":"-"
             }),
             beforeSend:function(){
                 $("#load").show();
@@ -130,17 +157,7 @@ $(document).ready(function(){
                 contentType:"application/json",
                 success:function(data){
                     if(data.code == "00"){
-                        var tbody;
-                        for(stu of data.content){
-                            tbody += `<tr><td scope="row">${stu.stuId}</td>
-                            <td>${stu.stuName}</td>
-                            <td>${stu.stuMobile}</td>
-                            <td>${stu.stuPaidMonth}</td>
-                            <td><a class="btnDel" id="${stu.stuId}" style="color:red;" title="Delete the student"><i class="fa-solid fa-square-minus"></i></a></td>
-                            </tr>`
-                        }
-
-                        $("#tbody").html(tbody);
+                        getDataLoop(data, "1");
                     }else{
                         $("#tbody").html("<tr><td></td><td></td><td style='text-align:center;'>No Data Found!!!</td><td></td><td></td></tr>");
                     }
@@ -178,6 +195,7 @@ $(document).ready(function(){
             url: "http://localhost:8080/api/v1/studentms/updateStudent",
             method: "put",
             contentType: "application/json",
+            async:true,
             data: JSON.stringify({
                 "stuId":stuId,
                 "stuName":stuName,
@@ -200,5 +218,41 @@ $(document).ready(function(){
         
         
     });
+
+    //paid button
+    $(document).on("click",".paid",function(e){
+        e.preventDefault();
+    
+        let month = $("#month").val();
+        let stuId = this.id;
+
+        $.ajax({
+            url:`http://localhost:8080/api/v1/studentms/updateById/${month}/${stuId}`,
+            method: "put",
+            contentType:"application/json",
+            async:true,
+            success: function(data){
+                if(data.code == "00"){
+                    alert("Updated!");
+                    getAllData();
+                }else{
+                    alert("No Data Found!!");
+                }
+            },
+            error:function(error){
+                console.log(error);
+            }
+        });
+        
+
+        
+    });
+
+    //changing month
+    $("#month").change(function(e){
+        getAllData();
+    });
+
+    
 
 });
