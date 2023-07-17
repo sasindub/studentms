@@ -5,6 +5,7 @@ import com.tution.studentms.dto.StudentDTO;
 import com.tution.studentms.service.StudentService;
 import com.tution.studentms.util.VarList;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -74,7 +75,7 @@ public class StudentController {
             }else if(res.equals("01")){
                 message    = "Do Not Found";
                 code       = VarList.RSP_NO_DATA_FOUND;
-                httpStatus = HttpStatus.BAD_REQUEST;
+                httpStatus = HttpStatus.ACCEPTED;
             }else{
                 message    = "Error";
                 code       = VarList.RSP_ERROR;
@@ -99,7 +100,7 @@ public class StudentController {
     public ResponseEntity updateStudentById(@PathVariable String paidMonth, @PathVariable int stuId){
         try{
             res = studentService.updateStudentById(paidMonth, stuId);
-            
+
 
             if(res.equals("00")){
                 message    = "Success";
@@ -108,7 +109,7 @@ public class StudentController {
             }else if(res.equals("06")){
                 message    = "Data Not Found";
                 code       = VarList.RSP_NO_DATA_FOUND;
-                httpStatus = HttpStatus.BAD_REQUEST;
+                httpStatus = HttpStatus.ACCEPTED;
             }else{
                 message    = "Error";
                 content    = null;
@@ -154,10 +155,18 @@ public class StudentController {
     public ResponseEntity getStudentBySearch(@PathVariable String searchedValue){
         try{
             List<StudentDTO> student = studentService.getStudentBySearch(searchedValue);
-            responseDto.setContent(student);
-            responseDto.setCode(VarList.RSP_SUCCESS);
-            responseDto.setMessage("Success");
-            return new ResponseEntity(responseDto, HttpStatus.ACCEPTED);
+            if(student.isEmpty()){
+                responseDto.setContent(null);
+                responseDto.setCode(VarList.RSP_NO_DATA_FOUND);
+                responseDto.setMessage("No Data Found");
+                return new ResponseEntity(responseDto, HttpStatus.ACCEPTED);
+            }else{
+                responseDto.setContent(student);
+                responseDto.setCode(VarList.RSP_SUCCESS);
+                responseDto.setMessage("Success");
+                return new ResponseEntity(responseDto, HttpStatus.ACCEPTED);
+            }
+
 
         }catch(Exception e){
             responseDto.setContent(null);
